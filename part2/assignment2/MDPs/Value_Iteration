@@ -1,0 +1,55 @@
+filename = 'mdp22.txt'
+file = open(filename,'r')
+lines = file.readlines()
+states= int(file.readline().split(" ")[1])
+actions =int(file.readline().split(" ")[1])
+num_st = list()
+num_act = list()
+for line in lines:
+    words = line.split(':')
+    word = words[1].strip()
+    if 'states' in line:
+        num_st = eval(word)
+        states = [i for i in range(num_st)]
+    elif 'actions' in line:
+        num_act = eval(word)
+        actions = [i for i in range(num_act)]
+        rp = [[[(0,0) for i in range(num_st)] for j in range(num_act)] for k in range(num_st)]
+    else:
+        gamma = eval(words)
+
+
+Val_func = [0 for i in range(num_st)]
+epsilon = 4e-09 #Random number
+pi = [0 for i in range(num_st)]
+while True:
+    err = 0
+    for s in states:
+        q = [[0 for i in range(num_act)] for j in range(num_st)]
+        for a in actions:
+            l = 0
+            for s0 in states:
+                l += rp[s][l][s0][1]*(rp[s][l][s0][0] + gamma*Val_func[s0])
+            Val_func[s] = max(Val_func[s],l)
+        err = max(err,abs(q - Val_func[s]))
+    if err < epsilon:
+        break
+for s in states:
+    max_a = 0
+    max_v = 0
+    for a in actions:
+        v = 0
+        for s0 in states:
+            v = v + rp[s][a][s0][1]*(rp[s][a][s0][0] + gamma*Val_func[s0])
+        if v > max_v:
+            max_a = a
+            max_v = v
+    pi[s] = max_a
+    
+file = open('sol-mdp22'+filename,'w')
+lines = list()
+for s in states:
+    lines.append(f"{'{:.6f}'.format(round(Val_func[s],6))} {pi[s]}\n")
+file.writelines(lines)
+file.close()
+
